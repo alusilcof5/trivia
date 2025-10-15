@@ -1,14 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-
-const SettingsContext = createContext();
-
-export const useSettings = () => {
-  const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error('useSettings debe usarse dentro de SettingsProvider');
-  }
-  return context;
-};
+import { useState, useEffect } from 'react';
+import { SettingsContext } from './SettingsContext';
 
 export const SettingsProvider = ({ children }) => {
   const defaultSettings = {
@@ -17,18 +8,18 @@ export const SettingsProvider = ({ children }) => {
     difficulty: ''
   };
 
-  const [settings, setSettings] = useState(defaultSettings);
-
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('triviaSettings');
-    if (savedSettings) {
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('triviaSettings');
+    if (saved) {
       try {
-        setSettings(JSON.parse(savedSettings));
+        return JSON.parse(saved);
       } catch (error) {
         console.error('Error al cargar settings:', error);
+        return defaultSettings;
       }
     }
-  }, []);
+    return defaultSettings;
+  });
 
   useEffect(() => {
     localStorage.setItem('triviaSettings', JSON.stringify(settings));
