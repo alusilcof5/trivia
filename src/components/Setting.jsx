@@ -1,22 +1,19 @@
-import { useContext } from 'react'
-import SettingsContext from '../context/SettingsContext'
-
-const Setting = ({ property, text, first, second }) => {
-  const { settings, updateSetting } = useContext(SettingsContext)
-
+function Setting({ label, children }) {
   return (
-    <div className='setting'>
-      <p>{text}</p>
-      <button
-        onClick={(e) => updateSetting(property, e.target.textContent)}
-        className={settings[property] === first ? 'btn-selected' : ''}
-      >
-        {first}
-      </button>
-      {/* TODO #8
-      /// Afegeix el segon botó de cada Setting perquè es mostri i funcioni com al vídeo. */}
+    <div style={{ marginBottom: '25px' }}>
+      <label style={{ 
+        display: 'block', 
+        fontSize: '18px', 
+        fontWeight: '600', 
+        marginBottom: '10px' 
+      }}>
+        {label}
+      </label>
+      <div>
+        {children}
+      </div>
     </div>
-  )
+  );
 }
 
-export default Setting
+export default Setting;

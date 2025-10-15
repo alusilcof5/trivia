@@ -1,25 +1,28 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SettingsProvider } from './context/SettingsContext';
 import { GameProvider } from './context/GameContext';
-import Home from './pages/Home';
-import Settings from './pages/Settings';
-import Game from './pages/Game';
-import Results from './pages/Results';
-import './App.css';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import NavBar from './components/NavBar';
+import About from './components/About';
+import Settings from './components/Settings';
+import Questions from './components/Questions';
+import NotFound from './components/NotFound';
 
 function App() {
   return (
     <SettingsProvider>
       <GameProvider>
         <Router>
-          <div className="app">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/game" element={<Game />} />
-              <Route path="/results" element={<Results />} />
-            </Routes>
-          </div>
+          <Header />
+          <NavBar />
+          <Routes>
+            <Route path="/" element={<About />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/questions" element={<Questions />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Footer />
         </Router>
       </GameProvider>
     </SettingsProvider>

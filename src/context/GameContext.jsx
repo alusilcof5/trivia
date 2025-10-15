@@ -1,48 +1,61 @@
-import { useState, useEffect } from 'react';
-import { GameContext } from './GameContext';
+import { createContext, useContext, useState, useEffect } from 'react';
 
-// Provider
+const GameContext = createContext();
+
+export const useGame = () => {
+  const context = useContext(GameContext);
+  if (!context) {
+    throw new Error('useGame debe usarse dentro de GameProvider');
+  }
+  return context;
+};
+
 export const GameProvider = ({ children }) => {
-  // Estado para aciertos y errores
   const [score, setScore] = useState({
     correct: 0,
     incorrect: 0
   });
 
-  // Historial de partidas
   const [history, setHistory] = useState([]);
 
-  // Cargar historial del localStorage al iniciar
   useEffect(() => {
-    const saved = localStorage.getItem('triviaHistory');
-    if (saved) {
-      setHistory(JSON.parse(saved));
+    const savedHistory = localStorage.getItem('triviaHistory');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Error al cargar historial:', error);
+      }
     }
   }, []);
 
-  // Guardar historial cuando cambie
   useEffect(() => {
     if (history.length > 0) {
       localStorage.setItem('triviaHistory', JSON.stringify(history));
     }
   }, [history]);
 
-  // Añadir acierto
   const addCorrect = () => {
-    setScore(prev => ({ ...prev, correct: prev.correct + 1 }));
+    setScore(prev => ({
+      ...prev,
+      correct: prev.correct + 1
+    }));
   };
 
-  // Añadir error
   const addIncorrect = () => {
-    setScore(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    setScore(prev => ({
+      ...prev,
+      incorrect: prev.incorrect + 1
+    }));
   };
 
-  // Resetear marcador
   const resetScore = () => {
-    setScore({ correct: 0, incorrect: 0 });
+    setScore({
+      correct: 0,
+      incorrect: 0
+    });
   };
 
-  // Guardar partida completa
   const saveGame = (gameData) => {
     const newGame = {
       id: Date.now(),
@@ -53,13 +66,20 @@ export const GameProvider = ({ children }) => {
     setHistory(prev => [newGame, ...prev].slice(0, 10));
   };
 
+  const getPercentage = () => {
+    const total = score.correct + score.incorrect;
+    if (total === 0) return 0;
+    return Math.round((score.correct / total) * 100);
+  };
+
   const value = {
     score,
     history,
     addCorrect,
     addIncorrect,
     resetScore,
-    saveGame
+    saveGame,
+    getPercentage
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
