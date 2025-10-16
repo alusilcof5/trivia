@@ -10,7 +10,7 @@ function App() {
   return (
     <SettingsProvider>
       <GameProvider>
-        <Router>
+        <Router basename="/trivia">
           <div className="app">
             <nav className="navbar">
               <div className="nav-container">
