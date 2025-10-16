@@ -1,3 +1,15 @@
-/node_modules
-/.src
+# Ignorar dependencias
+node_modules/
+
+# Ignorar archivos de desarrollo
+src/
+
+
+# Archivos del entorno
+.env
+.env.local
+.DS_Store
+
+# Archivos de sistema
+Thumbs.db
 
