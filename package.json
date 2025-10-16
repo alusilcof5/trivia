@@ -2,20 +2,17 @@
   "name": "open-trivia",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://alusilcof5.github.io/trivia",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-    ,"predeploy": "npm run build"
-    ,"deploy": "gh-pages -d dist",
-    "start": "react-scripts start",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "predeploy": "npm run build",
+  "deploy": "gh-pages -d dist"
   
   },
-  "dependencies": {
+    "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.6.2",
