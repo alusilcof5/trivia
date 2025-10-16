@@ -9,7 +9,7 @@ const Game = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const { resetScore, addCorrect, addIncorrect, saveGame } = useGame();
-  
+
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -22,15 +22,23 @@ const Game = () => {
 
   const fetchQuestions = async () => {
     try {
-      const { amount, category, difficulty } = settings;
-      let url = `https://opentdb.com/api.php?amount=${amount || 10}`;
-      if (category) url += `&category=${category}`;
-      if (difficulty) url += `&difficulty=${difficulty}`;
-      
+      const { amount = 10, category, difficulty } = settings || {};
+      if (!Number.isInteger(Number(amount)) || amount < 1) {
+        setError('La cantidad de preguntas debe ser un número válido mayor que 0.');
+        setLoading(false);
+        return;
+      }
+
+      let url = `https://opentdb.com/api.php?amount=${amount}`;
+      if (category && Number.isInteger(Number(category))) url += `&category=${category}`;
+      if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty.toLowerCase())) {
+        url += `&difficulty=${difficulty.toLowerCase()}`;
+      }
+
       const response = await fetch(url);
       const data = await response.json();
-      
-      if (data.response_code === 0) {
+
+      if (data.response_code === 0 && data.results.length > 0) {
         setQuestions(data.results);
       } else {
         setError('No se pudieron cargar las preguntas. Intenta con otros parámetros.');
@@ -49,7 +57,7 @@ const Game = () => {
       saveGame({
         totalQuestions: questions.length,
         category: settings.category,
-        difficulty: settings.difficulty
+        difficulty: settings.difficulty,
       });
       navigate('/score');
     }
@@ -81,7 +89,7 @@ const Game = () => {
     );
   }
 
-  if (questions.length === 0) {
+  if (questions.length === 0 || !questions[currentIndex]) {
     return (
       <div className="page-container">
         <div className="error-container">
@@ -101,20 +109,17 @@ const Game = () => {
     <div className="page-container">
       <div className="game-page">
         <ScoreBoard />
-
         <div className="progress-section">
           <div className="progress-info">
-            <span>Pregunta {currentIndex + 1} de {questions.length}</span>
+            <span>
+              Pregunta {currentIndex + 1} de {questions.length}
+            </span>
           </div>
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${progress}%` }}
-            />
+            <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
         </div>
-
-        <Question 
+        <Question
           question={currentQuestion}
           onCorrect={addCorrect}
           onIncorrect={addIncorrect}

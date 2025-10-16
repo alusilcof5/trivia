@@ -1,7 +1,17 @@
-import { useState, useEffect } from 'react';
-import { GameContext } from './GameContextContext';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from 'react';
 
-export function GameProvider({ children }) {
+const GameContext = createContext();
+
+export const useGame = () => {
+  const context = useContext(GameContext);
+  if (!context) {
+    throw new Error('useGame debe usarse dentro de GameProvider');
+  }
+  return context;
+};
+
+export const GameProvider = ({ children }) => {
   const [score, setScore] = useState(() => {
     const saved = localStorage.getItem('triviaScore');
     if (saved) {
@@ -89,4 +99,4 @@ export function GameProvider({ children }) {
       {children}
     </GameContext.Provider>
   );
-}
+};

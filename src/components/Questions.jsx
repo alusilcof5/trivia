@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSettings } from '../context/SettingsContext';
-import { useGame } from '../context/GameContext';
+import { useSettings } from '../contexts/SettingsContext';
+import { useGame } from '../contexts/GameContext';
 import Question from './Question';
 
 // Función para mezclar array (Fisher-Yates)

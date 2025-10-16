@@ -1,109 +1,148 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
+import { useGame } from '../contexts/GameContext';
+import Question from '../components/Question';
+import ScoreBoard from '../components/ScoreBoard';
 
-function Question({ question, onCorrect, onIncorrect, onNext, shuffleArray }) {
-  const [shuffledAnswers, setShuffledAnswers] = useState([]);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [showResult, setShowResult] = useState(false);
+const Game = () => {
+  const navigate = useNavigate();
+  const { settings } = useSettings();
+  const { resetScore, addCorrect, addIncorrect, saveGame } = useGame();
+
+  const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (question) {
-      const allAnswers = [
-        question.correct_answer,
-        ...question.incorrect_answers
-      ];
-      setShuffledAnswers(shuffleArray(allAnswers));
-      setSelectedAnswer(null);
-      setShowResult(false);
-    }
-  }, [question, shuffleArray]);
+    resetScore();
+    fetchQuestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const decodeHTML = (html) => {
-    const txt = document.createElement('textarea');
-    txt.innerHTML = html;
-    return txt.value;
+  const fetchQuestions = async () => {
+    try {
+      const { amount, category, difficulty } = settings;
+      let url = `https://opentdb.com/api.php?type=multiple&amount=${amount || 10}`;
+      if (category) url += `&category=${category}`;
+      if (difficulty) url += `&difficulty=${difficulty}`;
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Demasiadas solicitudes. Intenta de nuevo más tarde.');
+        } else if (response.status === 404) {
+          throw new Error('URL no encontrada. Verifica la dirección del API.');
+        } else {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+
+      if (data.response_code === 0) {
+        setQuestions(data.results);
+      } else {
+        setError('No se pudieron cargar las preguntas. Intenta con otros parámetros.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAnswerClick = (answer) => {
-    if (showResult) return;
-    
-    setSelectedAnswer(answer);
-    setShowResult(true);
-    
-    const isCorrect = answer === question.correct_answer;
-    if (isCorrect) {
-      onCorrect();
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(prev => prev + 1);
     } else {
-      onIncorrect();
+      saveGame({
+        totalQuestions: questions.length,
+        category: settings.category,
+        difficulty: settings.difficulty
+      });
+      navigate('/score');
     }
   };
 
-  const getButtonClass = (answer) => {
-    let className = 'answer-button';
-    
-    if (!showResult) {
-      return className;
-    }
-    
-    const isCorrect = answer === question.correct_answer;
-    const isSelected = answer === selectedAnswer;
-    
-    if (isSelected) {
-      className += isCorrect ? ' correct' : ' incorrect';
-    } else if (isCorrect) {
-      className += ' correct';
-    } else {
-      className += ' disabled';
-    }
-    
-    return className;
-  };
+  // ----- Renderizado -----
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Cargando preguntas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="error-container">
+          <div className="error-icon">⚠️</div>
+          <h2>Oops!</h2>
+          <p>{error}</p>
+          <button onClick={() => navigate('/settings')} className="btn-primary">
+            Volver a configuración
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="page-container">
+        <div className="error-container">
+          <p>No hay preguntas disponibles</p>
+          <button onClick={() => navigate('/settings')} className="btn-primary">
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentIndex];
+  const progress = ((currentIndex + 1) / questions.length) * 100;
 
   return (
-    <div className="question-card">
-      <div className="question-header">
-        <span className="category">{question.category}</span>
-        <span className={`difficulty ${question.difficulty}`}>
-          {question.difficulty}
-        </span>
-      </div>
+    <div className="page-container">
+      <div className="game-page">
+        <ScoreBoard />
 
-      <h3 className="question-text">
-        {decodeHTML(question.question)}
-      </h3>
-
-      <div className="answers">
-        {shuffledAnswers.map((answer, index) => (
-          <button
-            key={index}
-            className={getButtonClass(answer)}
-            onClick={() => handleAnswerClick(answer)}
-            disabled={showResult}
-          >
-            {decodeHTML(answer)}
-          </button>
-        ))}
-      </div>
-
-      {showResult && (
-        <div className={`result-message ${selectedAnswer === question.correct_answer ? 'success' : 'error'}`}>
-          {selectedAnswer === question.correct_answer ? (
-            <p>🎉 ¡Correcto! Bien hecho.</p>
-          ) : (
-            <p>
-              ❌ Incorrecto. La respuesta correcta es: 
-              <strong> {decodeHTML(question.correct_answer)}</strong>
-            </p>
-          )}
+        <div className="progress-section">
+          <div className="progress-info">
+            <span>Pregunta {currentIndex + 1} de {questions.length}</span>
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      )}
 
-      {showResult && (
-        <button className="next-button" onClick={onNext}>
-          Siguiente pregunta →
-        </button>
-      )}
+        {currentQuestion ? (
+          <Question
+            question={currentQuestion}
+            onCorrect={addCorrect}
+            onIncorrect={addIncorrect}
+            onNext={handleNext}
+          />
+        ) : (
+          <div className="loading-container">
+            <p>Cargando pregunta...</p>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
 
-export default Question;
+export default Game;
+

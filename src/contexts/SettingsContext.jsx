@@ -1,5 +1,15 @@
-import { useState, useEffect } from 'react';
-import { SettingsContext } from './SettingsContext';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const SettingsContext = createContext();
+
+export const useSettings = () => {
+  const context = useContext(SettingsContext);
+  if (!context) {
+    throw new Error('useSettings debe usarse dentro de SettingsProvider');
+  }
+  return context;
+};
 
 export const SettingsProvider = ({ children }) => {
   const defaultSettings = {
